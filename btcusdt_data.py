@@ -1,6 +1,5 @@
 import requests
 import matplotlib.pyplot as plt
-import time
 from datetime import datetime
 import pytz
 
@@ -33,27 +32,6 @@ def fetch_bybit_data(category, symbol, interval, limit, start=None, end=None):
 
     return data["result"]["list"]
 
-    
-    if start:
-        params["start"] = str(start)
-    
-    if end:
-        params["end"] = str(end)
-
-    response = requests.get(url, params=params)
-    print("API 응답 내용:", response.json())
-    
-    if response.status_code != 200:
-        print("API 호출에 실패했습니다. 상태 코드:", response.status_code)
-        return None
-
-    data = response.json()
-    if "result" not in data:
-        print("결과(result) 키가 응답에 없습니다.")
-        return None
-
-    return data["result"]["list"]
-
 def convert_to_kst(timestamp_ms):
     # 밀리초 단위의 UNIX 타임스탬프를 파싱
     timestamp_utc = datetime.utcfromtimestamp(int(timestamp_ms) / 1000.0)
@@ -64,19 +42,28 @@ def convert_to_kst(timestamp_ms):
     
     return timestamp_kst
 
-
-def plot_chart(data):
+def plot_chart(data, peaks=None, troughs=None):
     times = [convert_to_kst(item[0]) for item in data]  # 시간 데이터를 KST로 변환
     prices = [float(item[4]) for item in data]  # close price
 
     plt.figure(figsize=(15, 7))
-    plt.plot(times, prices, '-o')
+    plt.plot(times, prices, '-o', label='Price')
+    if peaks:
+        plt.plot([times[p] for p in peaks], [prices[p] for p in peaks], 'ro', label='Peak')
+    if troughs:
+        plt.plot([times[t] for t in troughs], [prices[t] for t in troughs], 'bo', label='Trough')
     plt.xlabel('Time')
     plt.ylabel('Price')
     plt.title('BTCUSDT Price Chart (KST)')
     plt.xticks(rotation=45)
+    plt.legend()
     plt.tight_layout()
     plt.show()
+
+def find_peaks_and_troughs(data):
+    peaks = [i for i in range(1, len(data)-1) if data[i-1] < data[i] > data[i+1]]
+    troughs = [i for i in range(1, len(data)-1) if data[i-1] > data[i] < data[i+1]]
+    return peaks, troughs
 
 def main():
     category = "spot"
@@ -103,8 +90,12 @@ def main():
 
         all_data.extend(last_data)
 
-    plot_chart(all_data)
+    # 피크와 트로프 찾기
+    prices = [float(item[4]) for item in all_data]
+    peaks, troughs = find_peaks_and_troughs(prices)
+
+    # 차트 그리기
+    plot_chart(all_data, peaks, troughs)
 
 if __name__ == "__main__":
     main()
-
