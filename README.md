@@ -6,3 +6,6 @@
 연결이 한 번 성립되면, 그 연결을 통해 지속적으로 데이터를 받을 수 있습니다.
 
 위에서 제시한 websockets를 사용하는 코드는 실시간 BTCUSDT의 orderbook 데이터를 지속적으로 받아와서 출력하는 코드입니다.
+
+2. btcusdt_data.py:  Bybit의 API를 통해 BTCUSDT의 가격 정보를 가져오는 파이썬 스크립트입니다.
+   1시간 봉 data 1000개의 데이터 추출, kst(utc-9)로의 시간 변환
